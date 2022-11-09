@@ -50,6 +50,27 @@ class Post
     }
 
     /**
+     * findOrFail
+     *
+     * Check if post exists.
+     * If not, throw exception.
+     *
+     * @param  string $slug
+     * @return object
+     * @throw ModelNotFoundException
+     */
+    public static function findOrFail(string $slug)
+    {
+        $post = static::find($slug);
+
+        if (!$post) {
+            throw new ModelNotFoundException();
+        }
+
+        return $post;
+    }
+
+    /**
      * all
      *
      * Scan /posts/ directory in /resources/ and return data of all
