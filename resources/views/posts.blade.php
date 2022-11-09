@@ -9,7 +9,7 @@
 </head>
 <body>
     @foreach ($posts as $post)
-        <article>
+        <article class="{{ $loop->even ? 'foo' : 'bar' }}">
             <h1>
                 <a href="/post/{{ $post->slug }}">
                     {{ $post->title }}
