@@ -4,41 +4,73 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\File;
+use Spatie\YamlFrontMatter\YamlFrontMatter;
+
 
 class Post
 {
+    public $slug;
+    public $title;
+    public $excerpt;
+    public $date;
+    public $body;
+
+    /**
+     * __construct
+     *
+     * @param  string $slug
+     * @param  string $title
+     * @param  string $excerpt
+     * @param  string $date
+     * @param  string $body
+     * @return object
+     */
+    public function __construct(string $slug, string $title, string $excerpt, string $date, string $body)
+    {
+        $this->slug = $slug;
+        $this->title = $title;
+        $this->excerpt = $excerpt;
+        $this->date = $date;
+        $this->body = $body;
+    }
+
     /**
      * find
      *
-     * Cache post for specified time.
-     * Arrow callback functions automatically allow for variables outside of
-     * closure to be used
+     * Collect all blog posts.
+     * Find the first post slug that matches $slug.
+     * Return matching post as an object.
+     *
      * @param  string $slug
-     * @return void
+     * @return object
      */
     public static function find(string $slug)
     {
-        // Uses resource_path() helper function to get path to /resources/
-        $path = resource_path("posts/{$slug}.html");
-
-        if (!file_exists($path)) {
-            throw new ModelNotFoundException();
-        }
-
-        return cache()->remember("posts.{$slug}", 600, fn() => file_get_contents($path));
+        return static::all()->firstWhere('slug', $slug);
     }
 
     /**
      * all
      *
-     * Scan /posts/ directory in /resources/ and return files
+     * Scan /posts/ directory in /resources/ and return data of all
+     * files as a Post object.
      *
-     * @return void
+     * @return object
      */
     public static function all()
     {
-        $files = File::files(resource_path("posts/"));
-
-        return array_map(fn($file) => $file->getContents(), $files);
+        // Find all the files in the files collection
+        return collect($files = File::files(resource_path('posts')))
+            // Loop over and convert each file into a YAML parsed document
+            ->map(fn($file) => YamlFrontMatter::parseFile($file))
+            // Loop over documents collection and create new Post with document data
+            ->map(fn($document) => new Post(
+                    $document->slug,
+                    $document->title,
+                    $document->excerpt,
+                    $document->date,
+                    $document->body()
+                )
+            );
     }
 }
