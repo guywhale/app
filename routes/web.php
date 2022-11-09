@@ -14,5 +14,24 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('posts');
 });
+
+Route::get('post/{post}', function ($slug) {
+    $path = __DIR__ . "/../resources/posts/{$slug}.html";
+
+    if (!file_exists($path)) {
+        return redirect('/');
+    }
+
+    /**
+     * Cache post for specified time.
+     * Arrow callback functions automatically allow for variables outside of
+     * closure to be used
+     */
+    $post = cache()->remember("posts.{$slug}", now()->addDay(), fn() => file_get_contents($path));
+
+    return view('post', [
+        'post' => $post,
+    ]);
+})->where('post', '[A-z_\-]+');
