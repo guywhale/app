@@ -54,13 +54,17 @@ class Post
      *
      * Scan /posts/ directory in /resources/ and return data of all
      * files as a Post object.
+     * Query is cachecd forever.
+     * In order to update query, the cache must be clear programatically,
+     * e.g. after a new post is created.
      *
      * @return object
      */
     public static function all()
     {
-        // Find all the files in the files collection
-        return collect($files = File::files(resource_path('posts')))
+        return cache()->rememberForever('posts.all', function () {
+            // Find all the files in the files collection
+            return collect($files = File::files(resource_path('posts')))
             // Loop over and convert each file into a YAML parsed document
             ->map(fn($file) => YamlFrontMatter::parseFile($file))
             // Loop over documents collection and create new Post with document data
@@ -71,6 +75,9 @@ class Post
                     $document->date,
                     $document->body()
                 )
-            );
+            )
+            // Sort by date in descending order
+            ->sortByDesc('date');
+        });
     }
 }
