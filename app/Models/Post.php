@@ -53,7 +53,8 @@ class Post
      * findOrFail
      *
      * Check if post exists.
-     * If not, throw exception.
+     * If yes, return post as an object.
+     * If no, throw exception.
      *
      * @param  string $slug
      * @return object
